@@ -1,15 +1,24 @@
 import pandas as pd
+import os
 
 
-def clear_dataset():
-    pd.set_option('future.no_silent_downcasting', True)
+def clear_dataset(path: str, save: bool =False) -> pd.DataFrame:
+    """Loads data from a csv file. Performs basic data cleaning and formatting.
 
-    df = pd.read_csv("data/smartwatch.csv")
+    Args:
+        path (str): path to the csv file
+        save (bool, optional): save the cleaned data to a new csv file. Defaults to False.
+
+    Returns:
+        pd.DataFrame: cleaned data (with only full records and numerical values)
+    """
+    pd.set_option("future.no_silent_downcasting", True)
+
+    df = pd.read_csv(path)
     original_length = len(df)
     # print(df)
 
-    ### DATA CLEAR
-    print("***DATA CLEARING***\n")
+    print("***DATA CLEANING***\n")
     # Number of incomplete records (rows with at least one NaN)
     incomplete_rows = df.isna().any(axis=1).sum()
     print(f"Incomplete records: {incomplete_rows}\n")
@@ -27,6 +36,7 @@ def clear_dataset():
     df["Activity Level"] = df["Activity Level"].replace(["Highly Active", "Highly_Active"], 3)
     df["Activity Level"] = df["Activity Level"].replace(["Active", "Actve"], 2)
     df["Activity Level"] = df["Activity Level"].replace(["Seddentary", "Sedentary"], 1)
+    df["Activity Level"] = df["Activity Level"].astype("int32")
 
     # Checking if all other values are numeric
     is_numeric = df.map(lambda x: pd.to_numeric(x, errors='coerce')).notna().all().all()
@@ -37,7 +47,7 @@ def clear_dataset():
         print(f"Columns with non-numeric values: {list(non_numeric_cols)}\n")
 
 
-    ### Stress Level column (limited value range)
+    ### Stress Level column (discrete values range)
     num_unique = df["Stress Level"].nunique()
     print(f"Number of unique values in Stress Level column: {num_unique}")
     val_unique = df["Stress Level"].unique()
@@ -52,7 +62,7 @@ def clear_dataset():
     ### Sleep Duration column (spectrum as a range)
     non_numeric = df["Sleep Duration (hours)"][~df["Sleep Duration (hours)"].apply(lambda x: isinstance(x, (int, float)))].unique()
     print(f"Non-numeric values in Sleep Duration column: {non_numeric}")
-    # Replace strings numbers as actual numbers and use NaN where conversion isn't success
+    # Replace strings numbers as actual numbers and use NaN where conversion isn't allowed
     df["Sleep Duration (hours)"] = df["Sleep Duration (hours)"].apply(pd.to_numeric, errors="coerce")
     # Check if there are some NaN now
     has_nan = df["Sleep Duration (hours)"].isna().any()
@@ -73,15 +83,21 @@ def clear_dataset():
         # Replace the column with unique ID values
         df["User ID"] = range(len(df))
         ids_unique = df["User ID"].is_unique
+        df["User ID"] = df["User ID"].astype("int32")
 
 
-    ### Summary of data clearing
-    print("***SUMMARY OF DATA CLEARING***\n")
+    ### Summary of data cleaning
+    print("***SUMMARY OF DATA cleaning***\n")
     print(f"Original number of records: {original_length}")
     print(f"Number of records after preprocessing: {len(df)}")
     is_numeric = df.map(lambda x: pd.to_numeric(x, errors='coerce')).notna().all().all()
     print(f"All values are numeric: {is_numeric}")
     print(f"All IDs are unique : {ids_unique}")
 
-    df["User ID"] = df["User ID"].astype("Int64") 
-    df.to_csv("data/smartwatch_cleared.csv", index=False)
+
+    if save:
+        name, extension = os.path.splitext(path)
+        name = name + "_cleaned"
+        df.to_csv(name + extension, index=False)
+
+    return df.reset_index(drop=True)

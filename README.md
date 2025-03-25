@@ -3,4 +3,7 @@ Smartwatch data analysis with usage of ML.
 
 
 ## Notes
-- Notice dataset's license
+- Careful what is on which device
+- PCA normalization problem
+- PCA
+- statistical measurements
