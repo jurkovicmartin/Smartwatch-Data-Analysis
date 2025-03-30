@@ -8,12 +8,12 @@ STATISTICAL_MEASURES = [
         "median",
         # 75th percentile
         lambda x: x.quantile(0.75),
-        "std", "var", "skew", "kurt"
+        "var", "std", "skew", "kurt"
     ]
 # Names to display
 STATISTICAL_MEASURES_NAMES = [
         "Count", "Minimum", "Maximum", "Mean", "25th percentile", "Median",
-        "75th percentile", "Std", "Var", "Skew", "Kurt"
+        "75th percentile", "Variance", "Standard Deviation", "Skewness", "ExcessKurtosis"
     ]
 
 

@@ -25,6 +25,9 @@ def clear_dataset(path: str, save: bool =False) -> pd.DataFrame:
     # Drop incomplete records
     df = df.dropna()
     
+    duplicated_rows = df.duplicated().sum()
+    print(f"Duplicated records: {duplicated_rows}\n")
+
 
     ### Activity Level column (with strings)
     num_unique = df["Activity Level"].nunique()

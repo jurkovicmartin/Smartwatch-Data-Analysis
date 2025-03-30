@@ -47,10 +47,9 @@ class KMeans:
                     cluster_counts[i] += len(cluster_points) 
                     # If there are points in cluster k update the clusters centroid position
                     if len(cluster_points) > 0:
-                        # self.centroids[k] = cluster_points.mean(dim=0)
-                         self.centroids[i] = (1 - learning_rate) * self.centroids[i] + learning_rate * cluster_points.mean(dim=0)
+                        self.centroids[i] = (1 - learning_rate) * self.centroids[i] + learning_rate * cluster_points.mean(dim=0)
 
-            # Check if there isn't any empty cluster
+            # Check if there is any empty cluster
             for i in range(self.clusters_num):
                 # If there is reinitialize the clusters centroid with a random point from the last batch
                 if cluster_counts[i] == 0:

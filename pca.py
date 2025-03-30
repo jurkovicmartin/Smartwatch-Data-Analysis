@@ -22,7 +22,7 @@ class PCA:
         self.mean = x.mean(dim=0)
         # Center the data (mean of each feature is 0)
         x_centered = x - self.mean
-        # Compute covariance matrix
+        # Compute covariance matrix (represents correlation between features)
         cov = torch.mm(x_centered.t(), x_centered) / (x.shape[0] - 1)
 
         # Compute eigenvectors (represents direction of maximum variance)
@@ -57,5 +57,5 @@ class PCA:
         """
         # Reconstruct the data
         x_reconstructed = torch.mm(x_transformed, self.components.t()) + self.mean
-        # Calculate MSE
+        # Calculate mean squared error
         return torch.mean((x - x_reconstructed) ** 2, dim=0)
