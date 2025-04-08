@@ -44,7 +44,7 @@ Dataset that would be analyzed is an uncleaned collection of smartwatch health d
 	+ Stress Level
 
 ### Dataset Class
-The dataset is stored inside of a CustomDataset class. The main reason for implementing this class is its usage with PyTorch's **DataLoader** that allow to effectively iterate through the dataset (even with batching). Another key features the class is that it stores separated ids, original (not normalized) and normalized data. In addition normalizing functions are implemented here as static methods.
+The dataset is stored inside of CustomDataset class. The main reason for implementing this class is its usage with PyTorch's **DataLoader** that allows to effectively iterate through the dataset (even with batching). Another key features of the class are that it stores separated ids, original and normalized data. In addition normalizing functions are implemented here as static methods.
 
 ## Statistical Measurements
 Following measurements are used for statistical analysis of the dataset.
@@ -99,7 +99,7 @@ Following measurements are used for statistical analysis of the dataset.
 ## Machine Learning Algorithms
 
 ### Principal Component Analysis (PCA)
-Implementation of PCA will serve for dataset dimensionality reduction. The dataset will be reduced to 2 dimensions so it can be well visualized. The goal of this algorithm is to perform this reduction with minimum information lost.
+Implementation of PCA will serve for dataset dimensionality reduction. The dataset will be reduced to 2 dimensions so it can be well visualized. The main goal of this algorithm is to perform the reduction with minimum information lost.
 
 In this project PCA is implemented as following.
 
@@ -107,40 +107,40 @@ In this project PCA is implemented as following.
 
 <img src="README_img/diagrams/pca.png" title="PCA Workflow" alt="PCA Workflow">
 
-At the beginning a mean value of each feature is computed. This value is then used to center the data (mean of each feature will be 0). The centering is a form of normalizing the data for better PCA performance (without centering the result components could be shifted). Next step is to compute the corelation matrix that contains information about correlations between each feature. From correlation matrix eigenvectors are computed. Eigenvector represents a direction in which the feature has maximum variance. This basically says which feature varies the most, means that this feature will have stronger impact on the data than more steady ones. Last step is an extraction of the components (each component we can imagine as a dimension). As mentioned before we extract the components with the highest variance.
+At the beginning of the algorithm the mean value of each feature is computed. This value is then used to center the data (mean of each feature will be 0). The centering is a form of normalizing the data for better PCA performance (without centering the result components could be shifted). Next step is to compute the corelation matrix that contains information about correlations between each feature. From correlation matrix eigenvectors are computed. Eigenvector represents a direction in which the feature has maximum variance. This basically says which feature varies the most, means that this feature will have stronger impact on the data than more steady ones. Last step is an extraction of the components (each component we can imagine as a dimension). As mentioned before we extract the components with the highest variance.
 
-In this PCA implementation there is also a method for computing MSE (Mean Square Error). This method reconstructs the reduced data back to its original form and computes the MSE of each feature. This error shows how different are reconstructed data from the original (shows how much information was lost in the transformation process).
+In this PCA implementation there is also a method for computing MSE (Mean Square Error). This method reconstructs the reduced data back to its original form and computes the MSE of each feature. This error shows how different are reconstructed data from the original (shows how much information was lost in the reduction process).
 
 ### K-Means
-K-Means is a clustering algorithm from unsupervised algorithms family. This algorithm takes input data and group similar ones (in some way) into a cluster. This way we can separate the data into groups. The main thing about this algorithm is to position centroid inside a space. Each of these centroid represents a cluster (area). The goal is to have the space separated into clusters. Result of this is that if we input a data point it will land inside of these clusters are and we can assign a label (group to it).
+K-Means is a clustering algorithm from unsupervised algorithms family. This algorithm takes input data and group similar ones (in some way) into a cluster. This way we can separate the data into groups. The main thing about this algorithm is how to position centroids inside a space. Each of these centroid points represents a cluster. We can image cluster as an area around the centroid. Any data point that lies in this are is a part of the cluster. The goal is to have kinda evenly distributed centroids (clusters) in the space. Then when we input a data point to trained model (has distributed centroids) the point will land inside one of these clusters. That means we can effectively separate data into different numbers of groups.
 
 *K-Means Workflow*
 
 <img src="README_img/diagrams/kmeans.png" title="K-Means Workflow" alt="K-Means Workflow">
 
-First step in fitting process is to initialize centroids positions. In this project the initialization was done with a help of the first batch of data. From this batch a random data points are chosen (number of chosen points = number of clusters). Centroids positions are the same as positions of these data points (another approach could be a pure random initialization = generating random number as position). This approach (position from batch) was chosen because it assures that each cluster will have at least 1 data point assigned to it (why this is good will be mentioned later).
+First step in training process is to initialize centroids positions. In this implementation the initialization was done with a help of the first batch of data. From this batch a random data points are chosen (number of chosen points = number of clusters). Then the centroids positions are the same as positions of these data points (another approach could be a pure random initialization = generating random number as position). This approach (position from batch) was chosen because it assures that each cluster will have at least 1 data point assigned to it (why this is good will be mentioned later).
 
-After initialization computation of distances will be performed. This means that for each data point (from batch) there will be computed its distance (Euclidean distance) to each of the centroids. Within these distances the smallest one will be taken for each data point = the point is assigned to the centroid (cluster).
+After initialization computation of distances will be performed. This means that for each data point (from a batch) there will be computed its distance (Euclidean distance) to each of the centroids. Within these distances the smallest one will be taken for each data point = the point is assigned to the closest centroid.
 
-Each centroid that has some points assigned to it will be updated. Updating simply means adjusting centroids position in the space. The main part of the update is addition of the mean value of the points that are assigned to that centroid (mean of the cluster). This can be imaged as moving the centroid towards the center of the cluster area. After updating centroids with assigned points there is a check if there are any empty clusters (centroids without assigned data points) that haven't been updated. If there is an empty cluster, its centroid will be reinitialized. This reinitialization is similar to the original one from the first step. The difference is that this time the random position is taken from the last batch (that is currently still in memory) instead of the first one that would have to be loaded again (inefficient). The point of reinitializing the centroid (changing its position) is to make sure it doesn't stay empty (useless).
+Each centroid that has some points assigned to it will be updated. Updating simply means adjusting centroid's position in the space. The main part of the updating process is an addition of the mean value of the points to the centroid. That means computing the mean value of the cluster (based on its points' positions) and adding it to the centroid's position. This can be imaged as moving the centroid towards the center of the data points (cluster). After updating centroids with assigned points there is a check if there are any empty clusters (centroids without assigned data points) that haven't been updated. If there is an empty cluster, its centroid will be reinitialized. This reinitialization is similar to the original one from the first step. The difference is that this time the random position is taken from the last batch (that is currently still in memory) instead of the first one that would have to be loaded again (inefficient). The point of reinitializing the centroid (changing its position) is to make sure it doesn't stay empty (useless).
 
-*Centroid update (with learning rate that allows better control over the algorithm, especially in case of problems with algorithm convergence)*
+Last step is to check for a convergence. If the centroids between training epochs shifted less than provided tolerance the algorithm ends. In other case data points are again loaded for new round of distances computing, etc.
+
+*Centroid update formula (with learning rate that allows better control over the algorithm, especially in case of problems with algorithm convergence)*
 
 $C_{\text{new}} = (1 - \alpha) C_{\text{old}} + \alpha \cdot {\text{mean}}$
-
-Last step is to check for the convergence. If the centroid between epochs shifted less than provided tolerance the algorithm ends. In other case data points are again provided for new round of distances computing, etc.
 
 *Euclidean distance*
 
 <img src="README_img/diagrams/euclidean.png" title="Euclidean distance" alt="Euclidean distance">
 
 ## Results
-In this chapter outputs of the program will be presented. Outputs are in forms of terminal print or a plot.
+This chapter is dedicated to a presentation of this project output. Snippets of terminal output in combination with plots will be there. Some terminal outputs have been rewritten into tables.
 
 ### Data Cleaning
 The goal of data cleaning is to kinda format the original dataset so it has **only valid numeric values**.
 
-Data cleaning was done manually step by step. This means that the cleaning code is suited only on this specific dataset. The basic idea of the cleaning is simple. First analyze some feature then if there is a problem write code to handle it.
+Data cleaning was done manually step by step. This means that the cleaning code is suited only to this specific dataset. The basic idea of the manual cleaning is pretty simple. First analyze some feature -> if there is a problem with it -> write a piece of code to handle it.
 
 The first pieces of information
 ```
@@ -148,7 +148,7 @@ Incomplete records: 1457
 
 Duplicated records: 0
 ```
-The problem here is 1457 incomplete records. As a solution the most basic principle was used = dropping the records. Alternatively if this approach wouldn't suit our dataset we could try to fill the missing information with approximation (for example putting mean values). I this case I told myself it is okay to drop them.
+The problem here is that 1457 records aren't complete (some data is missing in these records). As a solution the most basic principle was used = dropping the records. Alternatively if this approach wouldn't suit our dataset we could try to fill the missing information with approximations (for example inserting mean values). I this case I told myself it is okay to drop them.
 
 Now moving on to **Activity Level** column because it has string values and we want only numeric ones.
 ```
@@ -188,24 +188,24 @@ First we look at **Stress Level** column.
 Number of unique values in Stress Level column: 11
 Unique values of Stress Level column: ['1' '5' '3' '10' '2' '8' '9' 'Very High' '7' '6' '4']
 ```
-It looks like there is one value set with words, others contains number. Handling this is pretty simple. We will replace 'Very High' string with value 8 (I assume that it could mean 8) and other values just convert to numeric datatype.
+It looks like there is one value set with words, others contains number. Handling this isn't much a problem. We will replace 'Very High' string with value 8 (I assume that very high could correspond to 8) and other values just convert to numeric datatype.
 
-To this point we checked the columns for unique values because the field of values was discreet (couple of whole numbers). For **Sleep Duration** column this approach isn't good because it has a whole spectrum of values. So instead of analyzing unique values we look just at non numeric values.
+To this point we have been checking the columns for unique values because the field of values was discreet (couple of whole numbers). For **Sleep Duration** column this approach isn't good because it has a whole spectrum of values. So instead of analyzing unique values we just look at non numeric values.
 ```
 Non-numeric values in Sleep Duration column: ['7.167235622316564' 'ERROR' '7.367789630207228' ... '6.3821659358529015'
  '6.91654920303435' '5.691001039740254']
 ```
-It looks like there are numbers just putted as strings. The problem are the 'ERROR' values. Again, solution could be approximating the value (isn't as easy as in Stress Level column) or we can say it is okay to drop it. So we try to convert the values into numeric datatype and where this isn't allowed (string without a number) the value will be replaced with NaN (None, or empty cell). After that we simply drop the records with NaN.
+It looks like there are numbers that are inside a string datatype. The problem are the 'ERROR' values. Again, solution could be approximating the value (isn't as easy as in Stress Level column) or we can say it is okay to drop it. So we try to convert the values into a numeric datatype and where this isn't allowed (string that doesn't contain a number) the value will be replaced with NaN (pandas expression of None). After that we simply drop the records with NaN.
 ```
 Sleep Duration column has NaN values: True
 Number of NaN values: 218
 ```
-Now we should have all numbers numeric. What we will check now is if the **User ID** has only unique values (ids should be unique and not repeating).
+Now we should have all numbers numeric. But what we also need to check is if **User ID** column has only unique values (ids should be unique and not repeating).
 ```
 All IDs are unique : False
 Number of unique values in User ID column: 3473
 ```
-Result is that there is only 3473 unique ids between over 8000 records. This crazy ration doesn't allow us to drop the repeating ids. So to handle this we just replace the whole column with new (unique) ids. (We can do it like this because we know from earlier that are isn't any duplicates records, so even the ids are same for some records the other values are not).
+Result is that there is only 3473 unique ids between over 8000 records. This crazy ration doesn't allow us to drop the repeating ids. So to handle this we just replace the whole column with new (unique) ids. (We can do it like this because we know from earlier that aren't any duplicated records, so the records with the same id contain different values).
 
 **Result of cleaning**
 ```
@@ -218,9 +218,9 @@ All IDs are unique : True
 ### Data Preprocessing
 The purpose of data preprocessing it to further (than cleaning) prepare the data for processing. The main thing in this process is **data normalization**.
 
-For normalization a Z-Score function was chosen. The reason for this choice is that the normalized data has low mean value which is good for following algorithms (specially PCA). On the other hand Min-Max normalization (which is implemented but not used) only shrinks the values between 0 and 1. (We are not normalizing ids because there is no point to it, ids are not use in analysis or algorithms, they are just to identify users).
+For normalization a Z-Score function was chosen. The reason for this choice is that the normalized data has low mean value which is good for following algorithms (specially PCA). On the other hand Min-Max normalization (which is also implemented but not used) only shrinks the values between 0 and 1. (We are not normalizing ids because there is no point to it, ids are not use in analysis or algorithms, they are just to identify users).
 
-*Z-score normalizing fomula*
+*Z-score normalizing formula*
 
 $Z = \frac{\text{Value to Normalize} - \text{Mean}}{\text{Standard Deviation}}$
 
@@ -292,10 +292,10 @@ $Z = \frac{\text{Value to Normalize} - \text{Mean}}{\text{Standard Deviation}}$
   </tr>
 </table>
 
-Corelation matrix tells us how correlative are features between each other. We look at this because PCA couldn't be a good choice for some highly correlative dataset. In our case correlation looks good (near 0).
+Corelation matrix tells us how correlative are features between each other. We look at this because PCA might not be a good choice for some highly correlative dataset. In our case correlations look alright (near 0).
 
 ### PCA
-In this case we will use PCA to reduce the dataset dimension from 6 (without ids) to 2. With **2 dimensions** we can easily visualize the data points.
+In this project we will use PCA to reduce the dataset dimension from 6 (without ids) to 2. With **2 dimensions** we can easily visualize the data points in a 2D plot.
 
 *Dataset analysis*
 
@@ -419,9 +419,9 @@ In this case we will use PCA to reduce the dataset dimension from 6 (without ids
 5. feature variance: 0.67, reconstruction error: 0.80
 6. feature variance: 8.23, reconstruction error: 0.35
 
-From this errors we can see that feature 5 (Activity Level) has the highest relative error to its original variance. This means that PCA didn't captured (or ignored) information from this feature (seems that it is least important).
+From this errors we can see that feature 5 (Activity Level) has the highest relative error to its original variance. This means that PCA didn't captured (or just ignored) information from this feature (seems that it is least important).
 
-At this point we can start plotting the data points into 2D graph. Based on this graph we will also remove outliers (= points with extreme values that could bring some bias to future processing). The phrase "Based on this graph" tells us that outliers detection was done manually (by looking at the graph) and setting thresholds for dropping them as well.
+At this point we can start plotting the data points into 2D graph. Based on this plot we will also remove outliers (= points with extreme values that could bring some bias to future processing). The phrase "Based on this plot" tells us that outliers detection was done manually (by looking at the plot) and setting thresholds for dropping them as well (based on what we have seen).
 
 *After PCA data points*
 
@@ -432,7 +432,7 @@ Removed outliers: 63
 Number of records without outliers: 8262
 ```
 
-Threshold were set -3.0 for both of the components (axis).
+Thresholds were set -3.0 for both of the components (axis).
 
 *Dataset without outliers analysis*
 
@@ -548,7 +548,7 @@ Threshold were set -3.0 for both of the components (axis).
 </table>
 
 ### K-Means
-Now we are ready for the clustering. In this case we will separate the data into **3 clusters**.\
+Now we are ready for the clustering. In this case we will separate the data into **3 clusters**.
 
 *Clustered data points*
 
@@ -926,7 +926,7 @@ We can see that data points are spread kinda evenly between all of the clusters
 <img src="README_img/plots/comb_hist.png" title="Combined histograms" alt="Combined histograms">
 
 ## Showcase of different clusters
-Just a showcase of applying different number of clusters **without the additional analysis**.
+Just a showcase of using different number of clusters **without the additional analysis**.
 
 *Data separated into 2 clusters*
 
@@ -948,3 +948,4 @@ Just a showcase of applying different number of clusters **without the additiona
 - Keep eye on which variable is on which device
 - Min-Max normalization doesn't go well with PCA
 - PCA without normalization had significant data losses
+- Pandas performs many methods column-wise by default
